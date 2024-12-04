@@ -1,4 +1,5 @@
 pragma solidity =0.6.6;
+pragma experimental ABIEncoderV2;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
@@ -146,37 +147,39 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         TransferHelper.safeTransferETH(to, amountETH);
     }
     function removeLiquidityWithPermit(
-        address tokenA,
-        address tokenB,
-        uint256 fee,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
-        address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
+        RemoveLiquidityParams calldata params
     ) external virtual override returns (uint amountA, uint amountB) {
-        address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB, fee);
-        uint value = approveMax ? uint(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        (amountA, amountB) = removeLiquidity(tokenA, tokenB, fee, liquidity, amountAMin, amountBMin, to, deadline);
+        address pair = UniswapV2Library.pairFor(factory, params.tokenA, params.tokenB, params.fee);
+        uint value = params.approveMax ? uint(-1) : params.liquidity;
+        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, params.deadline, params.v, params.r, params.s);
+        (amountA, amountB) = removeLiquidity(
+            params.tokenA,
+            params.tokenB,
+            params.fee,
+            params.liquidity,
+            params.amountAMin,
+            params.amountBMin,
+            params.to,
+            params.deadline
+        );
     }
+    
     function removeLiquidityETHWithPermit(
-        address token,
-        uint256 fee,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountETHMin,
-        address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
+        RemoveLiquidityETHParams calldata params
     ) external virtual override returns (uint amountToken, uint amountETH) {
-        address pair = UniswapV2Library.pairFor(factory, token, WETH, fee);
-        uint value = approveMax ? uint(-1) : liquidity;
-        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        (amountToken, amountETH) = removeLiquidityETH(token, fee, liquidity, amountTokenMin, amountETHMin, to, deadline);
+        address pair = UniswapV2Library.pairFor(factory, params.token, WETH, params.fee);
+        uint value = params.approveMax ? uint(-1) : params.liquidity;
+        IUniswapV2Pair(pair).permit(msg.sender, address(this), value, params.deadline, params.v, params.r, params.s);
+        (amountToken, amountETH) = removeLiquidityETH(
+            params.token, 
+            params.fee,
+            params.liquidity, 
+            params.amountTokenMin,
+            params.amountETHMin,
+            params.to,
+            params.deadline
+        );
     }
-
     // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
